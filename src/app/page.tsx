@@ -101,12 +101,11 @@ const ScrambledTitle: React.FC = () => {
   useEffect(() => {
     if (mounted && scramblerRef.current) {
       const phrases = [
-        'Cyber Hygiene',
+        'cyber hygiene',
         'keeping you safe\ ',
         'today and\ tomorrow',
         'that is Securoso',
         '',
-        'your securoso today'
       ]
       
       let counter = 0
