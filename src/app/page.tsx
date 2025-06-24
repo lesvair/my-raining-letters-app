@@ -1,5 +1,6 @@
 "use client"
 
+import WaitlistForm from "@/components/waitlistform"
 import type React from "react"
 import { useState, useEffect, useCallback, useRef } from "react"
 
@@ -197,6 +198,9 @@ const RainingLetters: React.FC = () => {
   }, [])
 
   return (
+
+    <main>
+      
     <div className="relative w-full h-screen bg-black overflow-hidden">
       {/* Title */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
@@ -236,7 +240,14 @@ const RainingLetters: React.FC = () => {
         }
       `}</style>
     </div>
-  )
+
+     {/* This div acts as a container for your WaitlistForm, pushing it below the animation. */}
+      <div className="w-full bg-black py-20 flex justify-center items-center flex-grow"> 
+         <WaitlistForm />
+      </div>
+    </main>
+  );
 }
 
 export default RainingLetters
+
