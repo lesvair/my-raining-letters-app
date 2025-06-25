@@ -113,7 +113,7 @@ const WaitlistForm: React.FC = () => {
           className="text-white text-lg text-center" 
           style={{ fontFamily: 'monospace' }}
         >
-          Thanks for your interest! We'll be in touch.
+          Thanks for your interest! We will be in touch.
         </p>
       ) : (
         // Render the form if not yet submitted
