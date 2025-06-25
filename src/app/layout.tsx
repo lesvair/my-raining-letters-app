@@ -28,8 +28,9 @@ export default function RootLayout({
       <head>
         <Script
           src={`https://www.google.com/recaptcha/api.js?render=6LfUvmgrAAAAABeGcHGEc7HP9huBu1CokYfsdbnr`}
-          strategy="afterInteractive" // Loads the script after initial page render
-        />
+          async
+          defer
+          />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
