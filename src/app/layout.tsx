@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Script from 'next/script'; // Import Next.js Script component
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script
+        <script
           src={`https://www.google.com/recaptcha/api.js?render=6LfUvmgrAAAAABeGcHGEc7HP9huBu1CokYfsdbnr`}
           async
           defer
