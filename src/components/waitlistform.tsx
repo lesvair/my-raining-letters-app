@@ -25,9 +25,25 @@ const WaitlistForm: React.FC = () => {
     setError(null);
     setIsLoading(true);
 
-    // --- reCAPTCHA Step: Get the token ---
-    // This executes the reCAPTCHA check in the background and returns a token
-    const recaptchaToken = await captchaRef.current?.executeAsync();
+     let recaptchaToken: string | undefined;
+
+    if (captchaRef.current) {
+        try {
+            const token = await captchaRef.current.executeAsync();
+            recaptchaToken = token ?? undefined; // Converts null to undefined
+            console.log('Frontend: reCAPTCHA token generated:', recaptchaToken); // Log the token
+        } catch (execError) {
+            console.error("Frontend: Error executing reCAPTCHA:", execError);
+            setError("Failed to get reCAPTCHA token. Please try again.");
+            setIsLoading(false);
+            return;
+        }
+    } else {
+        console.error("Frontend: reCAPTCHA component ref is null. Is it rendered?");
+        setError("reCAPTCHA is not ready. Please try again.");
+        setIsLoading(false);
+        return;
+    }
 
     // If no token is received (e.g., ad blocker, network issue), show an error
     if (!recaptchaToken) {
