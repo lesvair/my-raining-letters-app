@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     const recaptchaResult = await recaptchaVerifyResponse.json();
 
-    if (!recaptchaResult.success || recaptchaResult.score < 0.5) { // You can adjust the score threshold
+    if (!recaptchaResult.success || recaptchaResult.score < 0.3) { // You can adjust the score threshold
       console.warn('reCAPTCHA verification failed for submission:', { score: recaptchaResult.score, errors: recaptchaResult['error-codes'] });
       // Return 403 Forbidden if reCAPTCHA fails, indicating likely bot activity
       return NextResponse.json({ message: 'reCAPTCHA verification failed. You might be a bot.' }, { status: 403 });

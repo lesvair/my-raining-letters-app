@@ -102,8 +102,8 @@ const ScrambledTitle: React.FC = () => {
   useEffect(() => {
     if (mounted && scramblerRef.current) {
       const phrases = [
-        'today and\ tomorrow',
         'keeping you safe\ ',
+        'today and\ tomorrow',
         'that is Securoso',
         '',
       ]
@@ -128,7 +128,7 @@ const ScrambledTitle: React.FC = () => {
       className="text-white text-6xl font-bold tracking-wider justify-center"
       style={{ fontFamily: 'monospace' }}
     >
-      RAINING LETTERS
+      securoso
     </h1>
   )
 }
@@ -139,7 +139,7 @@ const RainingLetters: React.FC = () => {
 
   const createCharacters = useCallback(() => {
     const allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?"
-    const charCount = 300
+    const charCount = 400
     const newCharacters: Character[] = []
 
     for (let i = 0; i < charCount; i++) {
@@ -147,7 +147,7 @@ const RainingLetters: React.FC = () => {
         char: allChars[Math.floor(Math.random() * allChars.length)],
         x: Math.random() * 100,
         y: Math.random() * 100,
-        speed: 0.1 + Math.random() * 0.3,
+        speed: 0.5 + Math.random() * 0.5,
       })
     }
 
