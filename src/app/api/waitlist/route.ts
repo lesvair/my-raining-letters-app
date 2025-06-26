@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
     });
 
     const recaptchaResult = await recaptchaVerifyResponse.json();
+    console.log('reCAPTCHA verification result:', recaptchaResult);
 
     if (!recaptchaResult.success || recaptchaResult.score < 0.3) { // You can adjust the score threshold
       console.warn('reCAPTCHA verification failed for submission:', { score: recaptchaResult.score, errors: recaptchaResult['error-codes'] });

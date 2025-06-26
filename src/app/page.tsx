@@ -112,7 +112,7 @@ const ScrambledTitle: React.FC = () => {
       const next = () => {
         if (scramblerRef.current) {
           scramblerRef.current.setText(phrases[counter]).then(() => {
-            setTimeout(next, 2000)
+            setTimeout(next, 1400)
           })
           counter = (counter + 1) % phrases.length
         }
@@ -139,7 +139,7 @@ const RainingLetters: React.FC = () => {
 
   const createCharacters = useCallback(() => {
     const allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?"
-    const charCount = 400
+    const charCount = 310
     const newCharacters: Character[] = []
 
     for (let i = 0; i < charCount; i++) {
@@ -147,7 +147,7 @@ const RainingLetters: React.FC = () => {
         char: allChars[Math.floor(Math.random() * allChars.length)],
         x: Math.random() * 100,
         y: Math.random() * 100,
-        speed: 0.5 + Math.random() * 0.5,
+        speed: 0.4 + Math.random() * 0.4,
       })
     }
 
@@ -168,7 +168,7 @@ const RainingLetters: React.FC = () => {
       setActiveIndices(newActiveIndices)
     }
 
-    const flickerInterval = setInterval(updateActiveIndices, 50)
+    const flickerInterval = setInterval(updateActiveIndices, 70)
     return () => clearInterval(flickerInterval)
   }, [characters.length])
 
