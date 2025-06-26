@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `secret=<span class="math-inline">\{RECAPTCHA\_SECRET\_KEY\}&response\=</span>{recaptchaToken}`,
+        body:`secret=${RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
     });
 
     const recaptchaResult = await recaptchaVerifyResponse.json();
