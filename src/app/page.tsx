@@ -44,8 +44,8 @@ class TextScramble {
     for (let i = 0; i < length; i++) {
       const from = oldText[i] || ''
       const to = newText[i] || ''
-      const start = Math.floor(Math.random() * 40)
-      const end = start + Math.floor(Math.random() * 40)
+      const start = Math.floor(Math.random() * 20)
+      const end = start + Math.floor(Math.random() * 20)
       this.queue.push({ from, to, start, end })
     }
     
@@ -112,7 +112,7 @@ const ScrambledTitle: React.FC = () => {
       const next = () => {
         if (scramblerRef.current) {
           scramblerRef.current.setText(phrases[counter]).then(() => {
-            setTimeout(next, 1400)
+            setTimeout(next, 100)
           })
           counter = (counter + 1) % phrases.length
         }
@@ -139,7 +139,7 @@ const RainingLetters: React.FC = () => {
 
   const createCharacters = useCallback(() => {
     const allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?"
-    const charCount = 310
+    const charCount = 150
     const newCharacters: Character[] = []
 
     for (let i = 0; i < charCount; i++) {
@@ -161,14 +161,14 @@ const RainingLetters: React.FC = () => {
   useEffect(() => {
     const updateActiveIndices = () => {
       const newActiveIndices = new Set<number>()
-      const numActive = Math.floor(Math.random() * 3) + 3
+      const numActive = Math.floor(Math.random() * 2) + 2
       for (let i = 0; i < numActive; i++) {
         newActiveIndices.add(Math.floor(Math.random() * characters.length))
       }
       setActiveIndices(newActiveIndices)
     }
 
-    const flickerInterval = setInterval(updateActiveIndices, 70)
+    const flickerInterval = setInterval(updateActiveIndices, 125)
     return () => clearInterval(flickerInterval)
   }, [characters.length])
 
