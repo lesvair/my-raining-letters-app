@@ -44,8 +44,8 @@ class TextScramble {
     for (let i = 0; i < length; i++) {
       const from = oldText[i] || ''
       const to = newText[i] || ''
-      const start = Math.floor(Math.random() * 40)
-      const end = start + Math.floor(Math.random() * 40)
+      const start = Math.floor(Math.random() * 20)
+      const end = start + Math.floor(Math.random() * 20)
       this.queue.push({ from, to, start, end })
     }
     
@@ -112,7 +112,7 @@ const ScrambledTitle: React.FC = () => {
       const next = () => {
         if (scramblerRef.current) {
           scramblerRef.current.setText(phrases[counter]).then(() => {
-            setTimeout(next, 100)
+            setTimeout(next, 1000)
           })
           counter = (counter + 1) % phrases.length
         }
