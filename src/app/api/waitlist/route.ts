@@ -35,12 +35,16 @@ export async function POST(request: NextRequest) {
   }
   // --- End Rate Limiting ---
 
-  let name: string;
-  let email: string | undefined = undefined;
+  let name: string = '';
+  let email: string = '';
+  let recaptchaToken: string = '';
 
   try {
-    const data = await request.json();
-    const { name, email, recaptchaToken } = data;
+     const requestBody = await request.json(); // Use a different name to avoid conflict with 'data'
+    // Assign values to the already declared variables
+    name = requestBody.name;
+    email = requestBody.email;
+    recaptchaToken = requestBody.recaptchaToken;
 
         // --- 1. Validate reCAPTCHA token ---
     if (!recaptchaToken) {
@@ -90,10 +94,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Successfully added to waitlist!', name, email, id: newEntry.id }, { status: 200 });
 
   } catch (error: any) { // Use 'any' for now, or refine error types
-    // Handle unique constraint error for email
-    if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
-      console.warn('Attempted duplicate email submission:', email);
-      return NextResponse.json({ message: 'This email is already on the waitlist.' }, { status: 409 }); // 409 Conflict
+     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      const prismaError = error as { code: string; meta?: { target?: string[] } }; // Type assertion
+      if (prismaError.meta?.target?.includes('email')) {
+        console.warn('Attempted duplicate email submission:', email); // 'email' is now in scope
+        return NextResponse.json({ message: 'This email is already on the waitlist.' }, { status: 409 });
+      }
+    }
+
+    // Handle JSON parsing error specifically if request.json() failed
+    if (error instanceof SyntaxError) {
+      console.error('Error parsing request body (likely not JSON):', error);
+      return NextResponse.json({ message: 'Invalid request data format.' }, { status: 400 });
     }
 
     console.error('Error processing waitlist submission:', error);
