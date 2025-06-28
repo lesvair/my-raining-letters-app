@@ -2,6 +2,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { ratelimit } from '@/lib/rateLimit';
+import prisma from '@/lib/prisma'; // Import Prisma client for database operations}
 
 const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
 
@@ -34,6 +35,9 @@ export async function POST(request: NextRequest) {
   }
   // --- End Rate Limiting ---
 
+  let name: string;
+  let email: string | undefined = undefined;
+
   try {
     const data = await request.json();
     const { name, email, recaptchaToken } = data;
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
     const recaptchaResult = await recaptchaVerifyResponse.json();
     console.log('reCAPTCHA verification result:', recaptchaResult);
 
-    if (!recaptchaResult.success || recaptchaResult.score < 0.3) { // You can adjust the score threshold
+    if (!recaptchaResult.success || recaptchaResult.score < 0.4) { // You can adjust the score threshold
       console.warn('reCAPTCHA verification failed for submission:', { score: recaptchaResult.score, errors: recaptchaResult['error-codes'] });
       // Return 403 Forbidden if reCAPTCHA fails, indicating likely bot activity
       return NextResponse.json({ message: 'reCAPTCHA verification failed. You might be a bot.' }, { status: 403 });
@@ -73,19 +77,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Please enter a valid email address.' }, { status: 400 });
     }
 
-    // --- IMPORTANT: This is where you would normally save to a database ---
-    console.log('New Waitlist Submission:');
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('reCAPTCHA Score:', recaptchaResult.score);
-    console.log('IP:', ip);
-    console.log('---------------------------');
-    // --- End of database placeholder ---
+    // --- 2. Save to Database ---
+    const newEntry = await prisma.waitlistEntry.create({
+      data: {
+        name: name,
+        email: email,
+      },
+    });
 
-    return NextResponse.json({ message: 'Successfully added to waitlist!', name, email }, { status: 200 });
-  } catch (error) {
+    console.log('New Waitlist Submission Saved:', { id: newEntry.id, name: newEntry.name, email: newEntry.email });
+
+    return NextResponse.json({ message: 'Successfully added to waitlist!', name, email, id: newEntry.id }, { status: 200 });
+
+  } catch (error: any) { // Use 'any' for now, or refine error types
+    // Handle unique constraint error for email
+    if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+      console.warn('Attempted duplicate email submission:', email);
+      return NextResponse.json({ message: 'This email is already on the waitlist.' }, { status: 409 }); // 409 Conflict
+    }
+
     console.error('Error processing waitlist submission:', error);
-    // Handle cases where JSON is malformed or other unexpected errors
-    return NextResponse.json({ message: 'Invalid request data.' }, { status: 400 });
+    return NextResponse.json({ message: 'Internal server error.' }, { status: 500 });
   }
 }
