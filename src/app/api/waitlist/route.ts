@@ -1,9 +1,9 @@
-// src/app/api/waitinglist/route.ts (Revised - Attempt 3 to fix compilation)
+// src/app/api/waitinglist/route.ts (Final attempt to fix compilation)
 
 import { NextResponse, NextRequest } from 'next/server';
 import { ratelimit } from '@/lib/rateLimit';
-import prisma from '@/lib/prisma'; // Import Prisma client for database operations
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'; // Import specific Prisma error type
+import prisma from '@/lib/prisma';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
 
@@ -14,9 +14,13 @@ export async function POST(request: NextRequest) {
   }
 
   // --- Rate Limiting ---
-  const ip = request.headers.get('x-forwarded-for') || request.ip;
+  // Rely exclusively on 'x-forwarded-for' for IP.
+  // In Vercel environments, this header is reliably provided by the edge network.
+  const ip = request.headers.get('x-forwarded-for');
+
   if (!ip) {
-    console.warn('Could not determine IP from x-forwarded-for header.');
+    // If for some reason x-forwarded-for is missing, it's a critical error for rate limiting.
+    console.warn('Could not determine IP from x-forwarded-for header for rate limiting.');
     return NextResponse.json({ message: 'Cannot determine IP address for rate limiting.' }, { status: 400 });
   }
 
@@ -36,13 +40,12 @@ export async function POST(request: NextRequest) {
   }
   // --- End Rate Limiting ---
 
-  // Declare variables that might be needed in catch block outside try/catch
-  let receivedEmail: string | undefined; // Using 'receivedEmail' to avoid naming conflicts, initialize as undefined
+  let receivedEmail: string | undefined;
 
   try {
     const { name, email, recaptchaToken } = await request.json();
 
-    receivedEmail = email; // Assign the email here so it's available in catch block
+    receivedEmail = email;
 
     // --- 1. Validate reCAPTCHA token ---
     if (!recaptchaToken) {
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!receivedEmail || typeof receivedEmail !== 'string' || !emailRegex.test(receivedEmail)) { // Use receivedEmail
+    if (!receivedEmail || typeof receivedEmail !== 'string' || !emailRegex.test(receivedEmail)) {
       return NextResponse.json({ message: 'Please enter a valid email address.' }, { status: 400 });
     }
 
@@ -81,24 +84,26 @@ export async function POST(request: NextRequest) {
     const newEntry = await prisma.waitlistEntry.create({
       data: {
         name: name,
-        email: receivedEmail, // Use receivedEmail
+        email: receivedEmail,
       },
     });
 
     console.log('New Waitlist Submission Saved:', { id: newEntry.id, name: newEntry.name, email: newEntry.email });
 
-    return NextResponse.json({ message: 'Successfully added to waitlist!', name, email: receivedEmail, id: newEntry.id }, { status: 200 }); // Use receivedEmail
+    return NextResponse.json({ message: 'Successfully added to waitlist!', name, email: receivedEmail, id: newEntry.id }, { status: 200 });
 
-  } catch (error) { // Use default 'unknown' type for catch
-    // Handle unique constraint error for email using the specific Prisma error type
+  } catch (error) {
     if (error instanceof PrismaClientKnownRequestError) {
-      if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
-        console.warn('Attempted duplicate email submission for:', receivedEmail, 'Error details:', error); // receivedEmail is accessible
+      if (
+        error.code === 'P2002' &&
+        Array.isArray(error.meta?.target) &&
+        error.meta.target.includes('email')
+      ) {
+        console.warn('Attempted duplicate email submission for:', receivedEmail, 'Error details:', error);
         return NextResponse.json({ message: 'This email is already on the waitlist.' }, { status: 409 });
       }
     }
 
-    // Handle JSON parsing error specifically if request.json() failed
     if (error instanceof SyntaxError) {
       console.error('Error parsing request body (likely not JSON):', error);
       return NextResponse.json({ message: 'Invalid request data format.' }, { status: 400 });
