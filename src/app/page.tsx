@@ -102,9 +102,9 @@ const ScrambledTitle: React.FC = () => {
   useEffect(() => {
     if (mounted && scramblerRef.current) {
       const phrases = [
-        'keeping you safe\ ',
+        'keeping you safe',
         'today and\ tomorrow',
-        'that is Securoso',
+        'that\ is\ Securoso',
         '',
       ]
       
