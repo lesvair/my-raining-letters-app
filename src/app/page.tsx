@@ -10,10 +10,12 @@ const DynamicWaitlistForm = dynamic(() => import('@/components/waitlistform'), {
 });
 
 interface Character {
-  char: string
-  x: number
-  y: number
-  speed: number
+  char: string;
+  x: number; // Will now be pixel values or relative to container
+  y: number; // Will now be pixel values or relative to container
+  speed: number;
+  originalX: number; // Store original for percentage-based reset, if needed
+  originalY: number; // Store original for percentage-based reset, if needed
 }
 
 class TextScramble {
@@ -139,30 +141,66 @@ const ScrambledTitle: React.FC = () => {
 }
 
 const RainingLetters: React.FC = () => {
-  const [characters, setCharacters] = useState<Character[]>([])
-  const [activeIndices, setActiveIndices] = useState<Set<number>>(new Set())
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [activeIndices, setActiveIndices] = useState<Set<number>>(new Set());
+  const animationContainerRef = useRef<HTMLDivElement>(null); // Ref to the animation container
+  const [isMobile, setIsMobile] = useState(false); // New state to track mobile status
 
+  // --- CHANGE 1: Detect Mobile Device ---
+  // This useEffect runs once on mount to determine if it's a mobile device.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleResize = () => {
+        // Adjust breakpoint as needed. Common mobile breakpoint is 768px.
+        setIsMobile(window.innerWidth <= 768);
+      };
+      // Initial check
+      handleResize();
+      // Listen for window resize to update mobile status
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
+  // --- CHANGE 2: Conditional Character Count and Initial Positioning ---
   const createCharacters = useCallback(() => {
     const allChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?"
-    const charCount = 100
-    const newCharacters: Character[] = []
+    // Reduced charCount for mobile. Desktop will still have 100 characters.
+    const charCount = isMobile ? 40 : 100; // Drastically reduced for mobile
+    const newCharacters: Character[] = [];
+
+    // Get container dimensions for pixel-based positioning
+    const containerWidth = animationContainerRef.current?.offsetWidth || window.innerWidth;
+    const containerHeight = animationContainerRef.current?.offsetHeight || window.innerHeight;
 
     for (let i = 0; i < charCount; i++) {
+      // Position characters using pixel values relative to the container.
+      // This is crucial for avoiding layout shifts.
+      const startX = Math.random() * containerWidth;
+      const startY = Math.random() * containerHeight;
+
       newCharacters.push({
         char: allChars[Math.floor(Math.random() * allChars.length)],
-        x: Math.random() * 100,
-        y: Math.random() * 100,
+        x: startX,
+        y: startY,
         speed: 0.4 + Math.random() * 0.4,
+        originalX: startX, // Store original for reset if needed
+        originalY: startY,
       })
     }
-
     return newCharacters
-  }, [])
+  }, [isMobile]); // Recreate characters if mobile state changes
 
   useEffect(() => {
-    setCharacters(createCharacters())
-  }, [createCharacters])
+    // Only create characters if the container ref is available or on mobile
+    // This handles the case where the container might not be immediately available on mount
+    if (animationContainerRef.current) {
+      setCharacters(createCharacters());
+    }
+  }, [createCharacters]);
 
+
+  // --- CHANGE 3: Optimize Flicker Interval ---
   useEffect(() => {
     const updateActiveIndices = () => {
       const newActiveIndices = new Set<number>()
@@ -172,40 +210,51 @@ const RainingLetters: React.FC = () => {
       }
       setActiveIndices(newActiveIndices)
     }
-
-    const flickerInterval = setInterval(updateActiveIndices, 125)
+    // Increased interval for less frequent flickering, reducing CPU load.
+    const flickerInterval = setInterval(updateActiveIndices, isMobile ? 250 : 125); // Slower flicker on mobile
     return () => clearInterval(flickerInterval)
-  }, [characters.length])
+  }, [characters.length, isMobile]); // Dependency on isMobile
 
+  // --- CHANGE 4: Refactor `updatePositions` for Composited Animation ---
   useEffect(() => {
-    let animationFrameId: number
+    let animationFrameId: number;
+    const containerHeight = animationContainerRef.current?.offsetHeight || window.innerHeight;
 
     const updatePositions = () => {
       setCharacters(prevChars => 
-        prevChars.map(char => ({
-          ...char,
-          y: char.y + char.speed,
-          ...(char.y >= 100 && {
-            y: -5,
-            x: Math.random() * 100,
-            char: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?"[
-              Math.floor(Math.random() * "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?".length)
-            ],
-          }),
-        }))
-      )
-      animationFrameId = requestAnimationFrame(updatePositions)
-    }
+        prevChars.map(char => {
+          const newY = char.y + char.speed;
+          // When character goes off-screen, reset its position
+          if (newY >= containerHeight) {
+            const containerWidth = animationContainerRef.current?.offsetWidth || window.innerWidth;
+            return {
+              ...char,
+              y: -50, // Start slightly above the top of the container (adjust as needed)
+              x: Math.random() * containerWidth, // New random X
+              char: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?"[
+                Math.floor(Math.random() * "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?".length)
+              ],
+            };
+          }
+          return {
+            ...char,
+            y: newY,
+          };
+        })
+      );
+      animationFrameId = requestAnimationFrame(updatePositions);
+    };
 
-    animationFrameId = requestAnimationFrame(updatePositions)
-    return () => cancelAnimationFrame(animationFrameId)
-  }, [])
+    animationFrameId = requestAnimationFrame(updatePositions);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [animationContainerRef]); // Dependency on ref to get current dimensions
+
 
   return (
-
     <main>
       
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    {/* --- CHANGE 5: Attach ref to the animation container --- */}
+    <div ref={animationContainerRef} className="relative w-full h-screen bg-black overflow-hidden">
       {/* Title */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
         <ScrambledTitle />
@@ -215,28 +264,35 @@ const RainingLetters: React.FC = () => {
       {characters.map((char, index) => (
         <span
           key={index}
-          className={`absolute text-xs transition-colors duration-100 ${
+          className={`absolute transition-colors duration-100 ${
             activeIndices.has(index)
-              ? "text-[#00ff00] text-base scale-125 z-10 font-bold animate-pulse"
+              ? "text-[#00ff00] z-10 font-bold animate-pulse" // Removed text-base scale-125 here
               : "text-slate-600 font-light"
           }`}
           style={{
-            left: `${char.x}%`,
-            top: `${char.y}%`,
-            transform: `translate(-50%, -50%) ${activeIndices.has(index) ? 'scale(1.25)' : 'scale(1)'}`,
-            textShadow: activeIndices.has(index) 
-              ? '0 0 8px rgba(255,255,255,0.8), 0 0 12px rgba(255,255,255,0.4)' 
+            // --- CHANGE 6: Use only `transform: translate()` for positioning ---
+            // Combine initial position with dynamic movement.
+            // Using pixel values directly for transform: translate,
+            // and using scale for active state changes ensures composited animation.
+            transform: `translate(${char.x}px, ${char.y}px) ${activeIndices.has(index) ? 'scale(1.25)' : 'scale(1)'}`,
+            // --- CHANGE 7: Simplify/remove text-shadow animation if possible (optional but good) ---
+            textShadow: activeIndices.has(index)
+              ? '0 0 8px rgba(0,255,0,0.8), 0 0 12px rgba(0,255,0,0.4)' // Changed white shadow to green glow
               : 'none',
             opacity: activeIndices.has(index) ? 1 : 0.4,
-            transition: 'color 0.1s, transform 0.1s, text-shadow 0.1s',
-            willChange: 'transform, top',
-            fontSize: '1.8rem'
+            transition: 'color 0.1s, transform 0.1s, opacity 0.1s', // Removed text-shadow from transition
+            willChange: 'transform, opacity', // Only these properties should trigger composited layers
+            // --- CHANGE 8: Control font size via CSS class or fixed pixel value ---
+            // Avoid dynamically changing font-size in style attribute for animation, as it causes layout shifts.
+            // If you want size difference, rely solely on `transform: scale()`.
+            fontSize: isMobile ? '1.2rem' : '1.8rem', // Smaller letters on mobile
           }}
         >
           {char.char}
         </span>
       ))}
 
+      {/* No changes needed to the global style block for this */}
       <style jsx global>{`
         .dud {
           color: #0f0;
@@ -254,4 +310,3 @@ const RainingLetters: React.FC = () => {
 }
 
 export default RainingLetters
-
