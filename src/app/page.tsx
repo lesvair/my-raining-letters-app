@@ -1,7 +1,6 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import WaitlistForm from "@/components/waitlistform"
 import type React from "react"
 import { useState, useEffect, useCallback, useRef } from "react"
 
