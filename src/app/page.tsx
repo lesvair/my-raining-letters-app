@@ -1,8 +1,14 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import WaitlistForm from "@/components/waitlistform"
 import type React from "react"
 import { useState, useEffect, useCallback, useRef } from "react"
+
+const DynamicWaitlistForm = dynamic(() => import('@/components/waitlistform'), {
+    ssr: false, // Ensure it's only rendered on the client side
+    loading: () => <p>Loading form...</p>, // Optional loading state
+});
 
 interface Character {
   char: string
@@ -242,7 +248,7 @@ const RainingLetters: React.FC = () => {
 
      {/* This div acts as a container for your WaitlistForm, pushing it below the animation. */}
       <div className="w-full bg-black py-20 flex justify-center items-center flex-grow"> 
-         <WaitlistForm />
+        <DynamicWaitlistForm /> {/* Use the dynamically imported component */}
       </div>
     </main>
   );
