@@ -30,6 +30,7 @@ export default function RootLayout({
           async
           defer
           />
+          <meta name="hibp-verify" content="dweb_wt24gw61u0ls7jj1pnolb6ka" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
