@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Seuroso",
+  title: "Securoso",
   description: "Seuroso - Keeping you Safe Today and Tomorrow",
 };
 
