@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Securoso",
-  description: "Seuroso - Keeping you Safe Today and Tomorrow",
+  description: "Securoso - cyber hygiene for SMBs",
 };
 
 export default function RootLayout({
